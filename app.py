@@ -1,7 +1,13 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
-import easyocr
+import easyocr, os
+
+# force model download during build
+if not os.path.exists(os.path.expanduser("~/.EasyOCR")):
+    reader_tmp = easyocr.Reader(['en'], gpu=False)
+    del reader_tmp
+
 
 st.set_page_config(page_title="✍️ Handwriting OCR", layout="centered")
 
