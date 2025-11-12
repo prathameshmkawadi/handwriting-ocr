@@ -6,11 +6,12 @@ import easyocr
 st.set_page_config(page_title="✍️ Handwriting OCR", layout="centered")
 
 st.title("✍️ Handwriting OCR App")
-st.write("Upload or capture an image of handwriting and extract text using EasyOCR.")
+st.write("Upload or capture an image of handwriting to extract text using EasyOCR.")
 
 @st.cache_resource
 def load_reader():
-    return easyocr.Reader(['en'])
+    # EasyOCR downloads model files once and caches them
+    return easyocr.Reader(['en'], gpu=False)
 
 reader = load_reader()
 
@@ -20,17 +21,20 @@ camera = st.camera_input("Or take a photo")
 source = camera or uploaded
 
 if source:
-    img = Image.open(source).convert("RGB")
-    st.image(img, caption="Input Image", use_column_width=True)
+    try:
+        img = Image.open(source).convert("RGB")
+        st.image(img, caption="Input Image", use_column_width=True)
 
-    st.info("Processing handwriting...")
-    results = reader.readtext(np.array(img))
+        st.info("Processing handwriting... please wait ⏳")
+        results = reader.readtext(np.array(img))
 
-    if results:
-        st.subheader("Recognized text:")
-        text_out = " ".join([t[1] for t in results])
-        st.code(text_out)
-    else:
-        st.warning("No text detected.")
+        if results:
+            st.subheader("Recognized Text:")
+            full_text = " ".join([t[1] for t in results])
+            st.code(full_text)
+        else:
+            st.warning("No text detected. Try a clearer image.")
+    except Exception as e:
+        st.error(f"⚠️ OCR failed: {e}")
 else:
     st.info("Please upload or capture an image to start.")
